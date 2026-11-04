@@ -1,0 +1,96 @@
+@import "tailwindcss";
+
+/* Warm Editorial Atelier — palet & font dari desain Stitch */
+@theme {
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Literata", Georgia, "Times New Roman", serif;
+
+  --color-linen: #F9F6F0;
+  --color-parchment: #F3ECE1;
+  --color-sand: #E8DCB8;
+  --color-rule: #E0D4C4;
+  --color-clay: #C26D45;
+  --color-clay-dark: #AC5D37;
+  --color-clay-deep: #914722;
+  --color-resin: #D9822B;
+  --color-ink: #2C4058;
+  --color-espresso: #231B15;
+  --color-muted: #6E5D4F;
+  --color-sage: #2D5932;
+  --color-sage-soft: #E7EFE6;
+  --color-ochre: #9E5911;
+  --color-ochre-soft: #FDF3E7;
+  --color-rust: #A84720;
+  --color-rust-soft: #F9EBE6;
+}
+
+@layer base {
+  html, body { background: var(--color-linen); color: var(--color-espresso); font-family: var(--font-sans); }
+  body { @apply antialiased; }
+  h1, h2, h3 { font-family: var(--font-serif); }
+}
+
+@layer components {
+  .tnum { font-variant-numeric: tabular-nums; }
+  .field-label { @apply mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-muted; }
+
+  .input {
+    @apply w-full rounded-xl bg-white px-3.5 py-2.5 text-sm text-espresso outline-none transition placeholder:text-[#8C7A6B];
+    border: 1.5px solid #D8CAB7;
+  }
+  .input:focus { border-color: var(--color-clay); box-shadow: 0 0 0 3px rgba(194,109,69,.15); }
+  .input-pill {
+    @apply w-full rounded-full bg-white px-4 py-2.5 text-sm text-espresso outline-none placeholder:text-[#8C7A6B];
+    box-shadow: inset 0 1px 2px rgba(35,27,21,.06), 0 1px 0 rgba(255,255,255,.8);
+    border: 1px solid rgba(224,212,196,.7);
+  }
+  .input-pill:focus { border-color: var(--color-clay); box-shadow: 0 0 0 3px rgba(194,109,69,.15); }
+
+  .btn { @apply inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition active:scale-[.97] disabled:pointer-events-none disabled:opacity-50; }
+  .btn-primary { @apply bg-clay text-white hover:bg-clay-dark; box-shadow: inset 0 1px 0 rgba(255,255,255,.2), 0 2px 6px rgba(194,109,69,.3); }
+  .btn-ghost { @apply bg-parchment text-espresso hover:bg-sand; border: 1px solid var(--color-rule); }
+  .btn-danger { @apply bg-rust text-white hover:opacity-90; }
+  .icon-btn { @apply inline-flex h-9 w-9 items-center justify-center rounded-full text-muted transition hover:bg-parchment hover:text-clay active:scale-95; }
+
+  .card {
+    @apply rounded-2xl bg-white;
+    border: 1px solid rgba(224,212,196,.6);
+    box-shadow: 0 2px 8px -2px rgba(44,27,21,.05), 0 1px 3px 0 rgba(44,27,21,.04);
+  }
+  .panel { @apply rounded-3xl; border: 1px solid rgba(224,212,196,.6); background: linear-gradient(180deg, #fff 0%, #FBF7F0 100%); box-shadow: 0 2px 8px -2px rgba(44,27,21,.05); }
+  .modal-overlay { background: rgba(35,27,21,.3); backdrop-filter: blur(6px); }
+  .modal { @apply rounded-3xl bg-white; box-shadow: 0 20px 40px -8px rgba(35,27,21,.2), 0 8px 16px -4px rgba(35,27,21,.1); }
+
+  .badge { @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide; }
+  .badge-sage { @apply bg-sage-soft text-sage; }
+  .badge-ochre { @apply bg-ochre-soft text-ochre; }
+  .badge-rust { @apply bg-rust-soft text-rust; }
+  .badge-ink { @apply text-ink; background: rgba(44,64,88,.1); }
+
+  /* Tabel admin */
+  .tbl { @apply w-full text-left text-sm; }
+  .tbl thead th { @apply h-12 bg-parchment px-4 text-[11px] font-bold uppercase tracking-wider text-muted; }
+  .tbl tbody td { @apply h-14 px-4; border-bottom: 1px solid var(--color-parchment); }
+  .tbl tbody tr:nth-child(even) { background: rgba(243,236,225,.3); }
+  .tbl tbody tr:hover { background: #FAF7F2; }
+  .tbl tbody tr:last-child td { border-bottom: 0; }
+
+  /* Rak buku */
+  .shelf-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+  @media (min-width: 768px) { .shelf-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); } }
+  .book-cover {
+    position: relative; aspect-ratio: 1 / 1.48; overflow: hidden; border-radius: 3px 8px 8px 3px;
+    box-shadow: 2px 8px 16px -2px rgba(35,27,21,.18), 0 2px 4px rgba(35,27,21,.08);
+    transition: transform .2s ease, box-shadow .2s ease;
+  }
+  .book-cover::before {
+    content: ""; position: absolute; inset: 0 auto 0 0; width: 12px; z-index: 2; pointer-events: none;
+    background: linear-gradient(to right, rgba(0,0,0,.18), rgba(255,255,255,.35) 30%, rgba(0,0,0,0));
+  }
+  .book-cover::after { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; background: linear-gradient(135deg, rgba(255,255,255,.14), transparent 45%); }
+  .shelf-item:hover .book-cover { transform: translateY(-4px); box-shadow: 4px 16px 24px -4px rgba(35,27,21,.22); }
+  .shelf-rail {
+    height: 14px; background: linear-gradient(#EADBBE 0 35%, #C9B591 35% 100%);
+    box-shadow: 0 6px 8px -4px rgba(62,39,20,.35);
+  }
+}
