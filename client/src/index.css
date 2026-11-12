@@ -94,3 +94,11 @@
     box-shadow: 0 6px 8px -4px rgba(62,39,20,.35);
   }
 }
+
+/* Cetak struk: hanya area .print-area yang tampil */
+@media print {
+  body * { visibility: hidden !important; }
+  .print-area, .print-area * { visibility: visible !important; }
+  .print-area { position: absolute; left: 0; top: 0; width: 80mm; padding: 6mm; }
+  .no-print { display: none !important; }
+}

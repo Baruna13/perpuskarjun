@@ -1,5 +1,6 @@
 import { NavLink, Outlet } from 'react-router-dom';
-import { LayoutDashboard, BookOpen, IdCard, UserCog, LogOut, Library } from 'lucide-react';
+import { LayoutDashboard, BookOpen, IdCard, UserCog, LogOut, Library, ArrowLeftRight, BookCopy, Clock } from 'lucide-react';
+import Onboarding from './Onboarding';
 import { useAuth } from '../context/AuthContext';
 
 const ALL = ['admin', 'pustakawan', 'anggota'];
@@ -7,6 +8,8 @@ const STAFF = ['admin', 'pustakawan'];
 const NAV = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, roles: ALL, end: true },
   { to: '/books', label: 'Katalog Buku', icon: BookOpen, roles: ALL },
+  { to: '/sirkulasi', label: 'Sirkulasi', icon: ArrowLeftRight, roles: STAFF },
+  { to: '/pinjaman', label: 'Pinjaman Saya', icon: BookCopy, roles: ['anggota'] },
   { to: '/members', label: 'Data Anggota', icon: IdCard, roles: STAFF },
   { to: '/users', label: 'Pengguna & Akses', icon: UserCog, roles: STAFF },
 ];
@@ -76,7 +79,19 @@ export default function Layout() {
         <button onClick={logout} className="icon-btn" title="Keluar"><LogOut size={19} /></button>
       </header>
 
-      <main className="mx-auto w-full max-w-[1600px] flex-1 p-4 pb-28 md:p-8 md:pb-10"><Outlet /></main>
+      <main className="mx-auto w-full max-w-[1600px] flex-1 p-4 pb-28 md:p-8 md:pb-10">
+        {user.role === 'anggota' && !user.member ? <Onboarding /> : (
+          <>
+            {user.role === 'anggota' && user.member && !user.member.is_active && (
+              <div className="mb-5 flex items-start gap-3 rounded-2xl bg-ochre-soft p-4 text-sm text-ochre">
+                <Clock size={18} className="mt-0.5 shrink-0" />
+                <div><b>Keanggotaan menunggu verifikasi.</b> Kode anggota Anda <b className="tnum">{user.member.member_code}</b>. Anda sudah bisa menjelajah katalog; peminjaman dan baca e-book aktif setelah pustakawan memverifikasi.</div>
+              </div>
+            )}
+            <Outlet />
+          </>
+        )}
+      </main>
 
       {/* Tab bawah mobile */}
       <nav className="fixed inset-x-0 bottom-0 z-10 flex border-t border-[#E5DAC8] bg-parchment/95 backdrop-blur md:hidden">

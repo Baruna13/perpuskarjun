@@ -49,6 +49,15 @@ router.get('/', wrap(async (req, res) => {
   res.json({ data: data.map((b) => present(b, req.user)), total: count, page, limit });
 }));
 
+// Cari buku via ISBN (hasil scan barcode) untuk transaksi
+router.get('/by-isbn/:isbn', staff, wrap(async (req, res) => {
+  const { data, error } = await supabase.from('books')
+    .select('id, isbn, title, author, cover_url, available_stock, total_stock, shelf_location')
+    .eq('isbn', req.params.isbn.trim()).single();
+  raise(error);
+  res.json(data);
+}));
+
 router.get('/:id', wrap(async (req, res) => {
   const { data, error } = await supabase.from('books').select('*, categories(name, slug)').eq('id', req.params.id).single();
   raise(error);

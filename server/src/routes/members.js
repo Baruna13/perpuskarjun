@@ -23,9 +23,19 @@ router.get('/', staff, wrap(async (req, res) => {
 // Cari anggota via kode (hasil scan QR)
 router.get('/by-code/:code', staff, wrap(async (req, res) => {
   const { data, error } = await supabase.from('members')
-    .select('*, profiles(full_name)').eq('member_code', req.params.code).single();
+    .select('*, profiles(full_name)').eq('member_code', req.params.code.trim()).single();
   raise(error);
-  res.json(data);
+  const { count } = await supabase.from('borrowings').select('id', { count: 'exact', head: true })
+    .eq('member_id', data.id).is('return_date', null);
+  const { data: fines } = await supabase.from('fines').select('amount, borrowings!inner(member_id)')
+    .eq('borrowings.member_id', data.id).eq('is_paid', false);
+  const { data: s } = await supabase.from('settings').select('value').eq('key', `max_borrow_${data.member_type}`).maybeSingle();
+  res.json({
+    ...data,
+    active_count: count ?? 0,
+    unpaid_fines: (fines ?? []).reduce((a, f) => a + Number(f.amount), 0),
+    max_limit: s ? parseInt(s.value, 10) : data.max_borrow_limit,
+  });
 }));
 
 router.post('/', staff, wrap(async (req, res) => {

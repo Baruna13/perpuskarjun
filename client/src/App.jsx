@@ -6,6 +6,10 @@ import Dashboard from './pages/Dashboard';
 import Books from './pages/Books';
 import Members from './pages/Members';
 import Users from './pages/Users';
+import Sirkulasi from './pages/Sirkulasi';
+import Pinjaman from './pages/Pinjaman';
+
+const STAFF = ['admin', 'pustakawan'];
 
 export default function App() {
   return (
@@ -14,8 +18,10 @@ export default function App() {
       <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
         <Route index element={<Dashboard />} />
         <Route path="books" element={<Books />} />
-        <Route path="members" element={<ProtectedRoute roles={['admin', 'pustakawan']}><Members /></ProtectedRoute>} />
-        <Route path="users" element={<ProtectedRoute roles={['admin', 'pustakawan']}><Users /></ProtectedRoute>} />
+        <Route path="sirkulasi" element={<ProtectedRoute roles={STAFF}><Sirkulasi /></ProtectedRoute>} />
+        <Route path="pinjaman" element={<ProtectedRoute roles={['anggota']}><Pinjaman /></ProtectedRoute>} />
+        <Route path="members" element={<ProtectedRoute roles={STAFF}><Members /></ProtectedRoute>} />
+        <Route path="users" element={<ProtectedRoute roles={STAFF}><Users /></ProtectedRoute>} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

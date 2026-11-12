@@ -122,6 +122,13 @@ export default function Books() {
     catch (e) { setError(e.message); }
   };
 
+  const reserve = async (b) => {
+    try {
+      await api('/reservations', { method: 'POST', body: { book_id: b.id } });
+      alert(`Reservasi "${b.title}" berhasil. Pantau di menu Pinjaman Saya.`);
+    } catch (e) { setError(e.message); }
+  };
+
   const pages = Math.max(Math.ceil(total / LIMIT), 1);
 
   return (
@@ -166,7 +173,8 @@ export default function Books() {
             {books.map((b) => (
               <ShelfBook key={b.id} book={b} isStaff={isStaff}
                 onRead={(bk) => setReader({ id: bk.id, title: bk.title })}
-                onEdit={(bk) => setModal({ book: bk })} onDelete={remove} />
+                onEdit={(bk) => setModal({ book: bk })} onDelete={remove}
+                onReserve={isStaff ? undefined : reserve} />
             ))}
           </div>
         )}
