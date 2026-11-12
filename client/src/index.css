@@ -102,3 +102,15 @@
   .print-area { position: absolute; left: 0; top: 0; width: 80mm; padding: 6mm; }
   .no-print { display: none !important; }
 }
+
+/* Laporan cetak */
+.print-only { display: none; }
+.tbl-compact thead th { height: 1.75rem; padding: 0.25rem 0.5rem; font-size: 9px; }
+.tbl-compact tbody td { height: auto; padding: 0.25rem 0.5rem; font-size: 10px; }
+@media print {
+  .print-only { display: block !important; }
+  .print-report, .print-report * { visibility: visible !important; }
+  .print-report { position: absolute; left: 0; top: 0; width: 100%; padding: 8mm; color: #000; }
+  .print-report .tbl thead th { background: #eee !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .print-report tr { break-inside: avoid; }
+}

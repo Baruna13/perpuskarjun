@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { GraduationCap, UserSquare2, ShieldCheck, UserX, UserPlus, Search, X, Mail, Lock, User } from 'lucide-react';
 import { api } from '../lib/api';
+import MemberDetail from '../components/MemberDetail';
 
 const EMPTY = { full_name: '', email: '', password: '', member_type: 'siswa' };
 const TABS = [['all', 'Semua'], ['siswa', 'Siswa'], ['guru', 'Guru'], ['staf', 'Staf']];
@@ -23,6 +24,7 @@ export default function Members() {
   const [status, setStatus] = useState('all');
   const [error, setError] = useState('');
   const [form, setForm] = useState(null);
+  const [detail, setDetail] = useState(null);
 
   const load = () => api('/members').then(setRows).catch((e) => setError(e.message));
   useEffect(() => { load(); }, []);
@@ -115,7 +117,7 @@ export default function Members() {
 
         <div className="overflow-x-auto">
           <table className="tbl">
-            <thead><tr><th>Kode</th><th>Nama anggota</th><th>Email</th><th>Tipe</th><th>Batas pinjam</th><th>Status</th></tr></thead>
+            <thead><tr><th>Kode</th><th>Nama anggota</th><th>Email</th><th>Tipe</th><th>Batas pinjam</th><th>Status</th><th /></tr></thead>
             <tbody>
               {shown.map((m) => (
                 <tr key={m.id}>
@@ -134,14 +136,16 @@ export default function Members() {
                       ● {m.is_active ? 'Aktif' : 'Non-aktif'}
                     </button>
                   </td>
+                  <td className="text-right"><button className="btn btn-ghost !px-4 !py-1.5 !text-xs" onClick={() => setDetail(m)}>Kartu & Riwayat</button></td>
                 </tr>
               ))}
-              {!shown.length && <tr><td colSpan={6} className="!h-24 text-center text-muted">Belum ada anggota yang cocok</td></tr>}
+              {!shown.length && <tr><td colSpan={7} className="!h-24 text-center text-muted">Belum ada anggota yang cocok</td></tr>}
             </tbody>
           </table>
         </div>
         <div className="border-t border-parchment px-4 py-3 text-xs text-muted">Menampilkan <b className="tnum text-espresso">{shown.length}</b> dari <b className="tnum text-espresso">{rows.length}</b> anggota</div>
       </div>
+      {detail && <MemberDetail member={detail} onClose={() => setDetail(null)} />}
     </div>
   );
 }

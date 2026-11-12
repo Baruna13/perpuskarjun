@@ -10,6 +10,8 @@ import borrowings from './routes/borrowings.js';
 import fines from './routes/fines.js';
 import reservations from './routes/reservations.js';
 import stats from './routes/stats.js';
+import reports from './routes/reports.js';
+import notifications from './routes/notifications.js';
 
 const app = express();
 
@@ -30,6 +32,8 @@ app.use('/api/borrowings', borrowings);
 app.use('/api/fines', fines);
 app.use('/api/reservations', reservations);
 app.use('/api/stats', stats);
+app.use('/api/reports', reports);
+app.use('/api/notifications', notifications);
 
 app.use((_req, res) => res.status(404).json({ error: 'Endpoint tidak ditemukan' }));
 

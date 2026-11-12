@@ -8,6 +8,7 @@ import Members from './pages/Members';
 import Users from './pages/Users';
 import Sirkulasi from './pages/Sirkulasi';
 import Pinjaman from './pages/Pinjaman';
+import Laporan from './pages/Laporan';
 
 const STAFF = ['admin', 'pustakawan'];
 
@@ -19,6 +20,7 @@ export default function App() {
         <Route index element={<Dashboard />} />
         <Route path="books" element={<Books />} />
         <Route path="sirkulasi" element={<ProtectedRoute roles={STAFF}><Sirkulasi /></ProtectedRoute>} />
+        <Route path="laporan" element={<ProtectedRoute roles={STAFF}><Laporan /></ProtectedRoute>} />
         <Route path="pinjaman" element={<ProtectedRoute roles={['anggota']}><Pinjaman /></ProtectedRoute>} />
         <Route path="members" element={<ProtectedRoute roles={STAFF}><Members /></ProtectedRoute>} />
         <Route path="users" element={<ProtectedRoute roles={STAFF}><Users /></ProtectedRoute>} />

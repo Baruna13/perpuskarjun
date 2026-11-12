@@ -1,5 +1,6 @@
 import { NavLink, Outlet } from 'react-router-dom';
-import { LayoutDashboard, BookOpen, IdCard, UserCog, LogOut, Library, ArrowLeftRight, BookCopy, Clock } from 'lucide-react';
+import { LayoutDashboard, BookOpen, IdCard, UserCog, LogOut, Library, ArrowLeftRight, BookCopy, Clock, BarChart3 } from 'lucide-react';
+import NotificationBell from './NotificationBell';
 import Onboarding from './Onboarding';
 import { useAuth } from '../context/AuthContext';
 
@@ -9,6 +10,7 @@ const NAV = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, roles: ALL, end: true },
   { to: '/books', label: 'Katalog Buku', icon: BookOpen, roles: ALL },
   { to: '/sirkulasi', label: 'Sirkulasi', icon: ArrowLeftRight, roles: STAFF },
+  { to: '/laporan', label: 'Laporan', icon: BarChart3, roles: STAFF },
   { to: '/pinjaman', label: 'Pinjaman Saya', icon: BookCopy, roles: ['anggota'] },
   { to: '/members', label: 'Data Anggota', icon: IdCard, roles: STAFF },
   { to: '/users', label: 'Pengguna & Akses', icon: UserCog, roles: STAFF },
@@ -37,7 +39,7 @@ export default function Layout() {
   return (
     <div className="min-h-screen bg-linen md:flex">
       {/* Sidebar: rail ikon di tablet, penuh di desktop */}
-      <aside className="sticky top-0 hidden h-screen shrink-0 flex-col gap-6 border-r border-[#E5DAC8] bg-parchment p-4 md:flex md:w-20 lg:w-[260px]">
+      <aside className="no-print sticky top-0 hidden h-screen shrink-0 flex-col gap-6 border-r border-[#E5DAC8] bg-parchment p-4 md:flex md:w-20 lg:w-[260px]">
         <div className="hidden lg:block"><Brand /></div>
         <div className="flex justify-center lg:hidden"><Brand compact /></div>
         <div className="border-t border-[#E5DAC8]" />
@@ -74,12 +76,13 @@ export default function Layout() {
       </aside>
 
       {/* Header mobile */}
-      <header className="sticky top-0 z-10 flex items-center justify-between border-b border-[#E5DAC8] bg-parchment/95 px-4 py-2.5 backdrop-blur md:hidden">
+      <header className="no-print sticky top-0 z-10 flex items-center justify-between border-b border-[#E5DAC8] bg-parchment/95 px-4 py-2.5 backdrop-blur md:hidden">
         <Brand />
         <button onClick={logout} className="icon-btn" title="Keluar"><LogOut size={19} /></button>
       </header>
 
       <main className="mx-auto w-full max-w-[1600px] flex-1 p-4 pb-28 md:p-8 md:pb-10">
+        <div className="no-print mb-4 flex justify-end"><NotificationBell /></div>
         {user.role === 'anggota' && !user.member ? <Onboarding /> : (
           <>
             {user.role === 'anggota' && user.member && !user.member.is_active && (
@@ -94,7 +97,7 @@ export default function Layout() {
       </main>
 
       {/* Tab bawah mobile */}
-      <nav className="fixed inset-x-0 bottom-0 z-10 flex border-t border-[#E5DAC8] bg-parchment/95 backdrop-blur md:hidden">
+      <nav className="no-print fixed inset-x-0 bottom-0 z-10 flex border-t border-[#E5DAC8] bg-parchment/95 backdrop-blur md:hidden">
         {items.map(({ to, label, icon: Icon, end }) => (
           <NavLink key={to} to={to} end={end}
             className={({ isActive }) => `flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[10px] font-bold ${isActive ? 'text-clay' : 'text-[#8C7A6B]'}`}>

@@ -1,10 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
-import { BookCopy, RefreshCw, X, Wallet, CalendarClock } from 'lucide-react';
+import { BookCopy, RefreshCw, X, Wallet, CalendarClock, IdCard } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { CardModal } from '../components/MemberCard';
 import { api } from '../lib/api';
 import { rupiah, tgl } from '../lib/format';
 import StatusBadge from '../components/StatusBadge';
 
 export default function Pinjaman() {
+  const { user } = useAuth();
+  const [card, setCard] = useState(false);
   const [loans, setLoans] = useState([]);
   const [fines, setFines] = useState([]);
   const [resv, setResv] = useState([]);
@@ -38,6 +42,10 @@ export default function Pinjaman() {
         <h1 className="text-4xl font-semibold tracking-tight">Pinjaman Saya</h1>
         <p className="mt-1 text-sm text-muted">Buku yang sedang dipinjam, denda, reservasi, dan riwayat.</p>
       </div>
+
+      {user.member && (
+        <button className="btn btn-ghost" onClick={() => setCard(true)}><IdCard size={16} /> Kartu Anggota Saya</button>
+      )}
 
       {msg && <div className={`rounded-xl p-3 text-sm font-medium ${msg.type === 'ok' ? 'bg-sage-soft text-sage' : 'bg-rust-soft text-rust'}`}>{msg.text}</div>}
 
@@ -104,6 +112,7 @@ export default function Pinjaman() {
           </table>
         </div>
       </section>
+      {card && <CardModal name={user.full_name} code={user.member.member_code} type={user.member.member_type} onClose={() => setCard(false)} />}
     </div>
   );
 }
