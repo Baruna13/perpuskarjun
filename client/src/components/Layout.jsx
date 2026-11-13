@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from 'react-router-dom';
-import { LayoutDashboard, BookOpen, IdCard, UserCog, LogOut, Library, ArrowLeftRight, BookCopy, Clock, BarChart3 } from 'lucide-react';
+import { LayoutDashboard, BookOpen, IdCard, UserCog, LogOut, Library, ArrowLeftRight, BookCopy, Clock, BarChart3, PackagePlus, Heart, Settings } from 'lucide-react';
 import NotificationBell from './NotificationBell';
 import Onboarding from './Onboarding';
 import { useAuth } from '../context/AuthContext';
@@ -11,8 +11,11 @@ const NAV = [
   { to: '/books', label: 'Katalog Buku', icon: BookOpen, roles: ALL },
   { to: '/sirkulasi', label: 'Sirkulasi', icon: ArrowLeftRight, roles: STAFF },
   { to: '/laporan', label: 'Laporan', icon: BarChart3, roles: STAFF },
+  { to: '/pengadaan', label: 'Pengadaan', icon: PackagePlus, roles: STAFF },
+  { to: '/wishlist', label: 'Wishlist', icon: Heart, roles: ['anggota'] },
   { to: '/pinjaman', label: 'Pinjaman Saya', icon: BookCopy, roles: ['anggota'] },
   { to: '/members', label: 'Data Anggota', icon: IdCard, roles: STAFF },
+  { to: '/pengaturan', label: 'Pengaturan', icon: Settings, roles: ['admin'] },
   { to: '/users', label: 'Pengguna & Akses', icon: UserCog, roles: STAFF },
 ];
 const ROLE_LABEL = { admin: 'Admin Perpustakaan', pustakawan: 'Pustakawan', anggota: 'Anggota' };
@@ -97,10 +100,10 @@ export default function Layout() {
       </main>
 
       {/* Tab bawah mobile */}
-      <nav className="no-print fixed inset-x-0 bottom-0 z-10 flex border-t border-[#E5DAC8] bg-parchment/95 backdrop-blur md:hidden">
+      <nav className="no-print fixed inset-x-0 bottom-0 z-10 flex overflow-x-auto border-t border-[#E5DAC8] bg-parchment/95 backdrop-blur md:hidden">
         {items.map(({ to, label, icon: Icon, end }) => (
           <NavLink key={to} to={to} end={end}
-            className={({ isActive }) => `flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[10px] font-bold ${isActive ? 'text-clay' : 'text-[#8C7A6B]'}`}>
+            className={({ isActive }) => `flex min-w-[76px] flex-1 flex-col items-center gap-0.5 py-2.5 text-[10px] font-bold ${isActive ? 'text-clay' : 'text-[#8C7A6B]'}`}>
             <Icon size={20} /> {label.split(' ')[0]}
           </NavLink>
         ))}

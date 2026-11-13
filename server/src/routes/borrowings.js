@@ -11,14 +11,20 @@ const staff = requireRole('admin', 'pustakawan');
 
 // Pinjam: input member_code + isbn (hasil scan)
 router.post('/', staff, wrap(async (req, res) => {
-  const { member_code, isbn } = z.object({
+  const { member_code, isbn, book_id } = z.object({
     member_code: z.string().trim().min(1, 'Kode anggota wajib diisi'),
-    isbn: z.string().trim().min(1, 'ISBN wajib diisi'),
-  }).parse(req.body);
+    isbn: z.string().trim().min(1).optional(), // ISBN atau kode buku
+    book_id: z.string().uuid().optional(),
+  }).refine((v) => v.isbn || v.book_id, { message: 'ISBN / kode buku wajib diisi' }).parse(req.body);
 
   const { data: member } = await supabase.from('members').select('id').eq('member_code', member_code).maybeSingle();
-  const { data: book } = await supabase.from('books').select('id').eq('isbn', isbn).maybeSingle();
   if (!member) throw new HttpError(404, 'Anggota tidak ditemukan');
+
+  let book = book_id ? { id: book_id } : null;
+  if (!book) {
+    ({ data: book } = await supabase.from('books').select('id').eq('isbn', isbn).maybeSingle());
+    if (!book) ({ data: book } = await supabase.from('books').select('id').eq('book_code', isbn).maybeSingle());
+  }
   if (!book) throw new HttpError(404, 'Buku tidak ditemukan');
 
   const { data, error } = await supabase.rpc('borrow_book', {

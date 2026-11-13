@@ -12,6 +12,10 @@ import reservations from './routes/reservations.js';
 import stats from './routes/stats.js';
 import reports from './routes/reports.js';
 import notifications from './routes/notifications.js';
+import wishlist from './routes/wishlist.js';
+import acquisitions from './routes/acquisitions.js';
+import settings from './routes/settings.js';
+import backup from './routes/backup.js';
 
 const app = express();
 
@@ -34,6 +38,10 @@ app.use('/api/reservations', reservations);
 app.use('/api/stats', stats);
 app.use('/api/reports', reports);
 app.use('/api/notifications', notifications);
+app.use('/api/wishlist', wishlist);
+app.use('/api/acquisitions', acquisitions);
+app.use('/api/settings', settings);
+app.use('/api/backup', backup);
 
 app.use((_req, res) => res.status(404).json({ error: 'Endpoint tidak ditemukan' }));
 

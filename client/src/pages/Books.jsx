@@ -4,10 +4,14 @@ import { api } from '../lib/api';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import BookReader from '../components/BookReader';
+import BookDetail from '../components/BookDetail';
 import ShelfBook from '../components/ShelfBook';
 
 const LIMIT = 15;
-const EMPTY = { isbn: '', title: '', author: '', publisher: '', publish_year: '', category_id: '', total_stock: 1, shelf_location: '' };
+const EMPTY = {
+  isbn: '', book_code: '', title: '', author: '', publisher: '', description: '', publish_year: '', category_id: '',
+  total_stock: 1, shelf_location: '', acquisition_source: '', acquisition_supplier: '',
+};
 
 async function uploadFile(bookId, kind, file) {
   const up = await api(`/books/${bookId}/upload-url`, { method: 'POST', body: { kind, filename: file.name } });
@@ -28,9 +32,9 @@ function FileField({ label, accept, file, onChange }) {
 
 function BookForm({ book, categories, onClose, onSaved }) {
   const [f, setF] = useState(book ? {
-    isbn: book.isbn ?? '', title: book.title, author: book.author, publisher: book.publisher ?? '',
-    publish_year: book.publish_year ?? '', category_id: book.category_id ?? '',
-    total_stock: book.total_stock, shelf_location: book.shelf_location,
+    isbn: book.isbn ?? '', book_code: book.book_code ?? '', title: book.title, author: book.author,
+    publisher: book.publisher ?? '', description: book.description ?? '', publish_year: book.publish_year ?? '',
+    category_id: book.category_id ?? '', total_stock: book.total_stock, shelf_location: book.shelf_location,
   } : EMPTY);
   const [cover, setCover] = useState(null);
   const [ebook, setEbook] = useState(null);
@@ -62,6 +66,7 @@ function BookForm({ book, categories, onClose, onSaved }) {
           <div><label className="field-label">Judul *</label><input className="input" value={f.title} onChange={set('title')} required /></div>
           <div><label className="field-label">Penulis *</label><input className="input" value={f.author} onChange={set('author')} required /></div>
           <div><label className="field-label">ISBN (untuk scan barcode)</label><input className="input tnum" value={f.isbn} onChange={set('isbn')} /></div>
+          <div><label className="field-label">Kode buku (jika tanpa ISBN)</label><input className="input tnum" value={f.book_code} onChange={set('book_code')} placeholder="mis. BK-0001" /></div>
           <div><label className="field-label">Penerbit</label><input className="input" value={f.publisher} onChange={set('publisher')} /></div>
           <div><label className="field-label">Tahun terbit</label><input className="input" type="number" value={f.publish_year} onChange={set('publish_year')} /></div>
           <div><label className="field-label">Kategori</label>
@@ -70,7 +75,17 @@ function BookForm({ book, categories, onClose, onSaved }) {
               {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select></div>
           <div><label className="field-label">Stok total *</label><input className="input" type="number" min="0" value={f.total_stock} onChange={set('total_stock')} required /></div>
-          <div><label className="field-label">Lokasi rak * (cth: RAK-A1)</label><input className="input" value={f.shelf_location} onChange={set('shelf_location')} required /></div>
+          <div className="md:col-span-2"><label className="field-label">Lokasi rak * (cth: RAK-A1)</label><input className="input" value={f.shelf_location} onChange={set('shelf_location')} required /></div>
+          <div className="md:col-span-2"><label className="field-label">Deskripsi</label><textarea className="input" rows={4} value={f.description} onChange={set('description')} placeholder="Sinopsis singkat buku" /></div>
+          {!book && (
+            <>
+              <div><label className="field-label">Sumber pengadaan</label>
+                <select className="input" value={f.acquisition_source} onChange={set('acquisition_source')}>
+                  <option value="">— Tidak dicatat —</option><option value="pembelian">Pembelian</option><option value="hibah">Hibah</option><option value="sumbangan">Sumbangan</option><option value="lainnya">Lainnya</option>
+                </select></div>
+              <div><label className="field-label">Pemasok / donatur</label><input className="input" value={f.acquisition_supplier} onChange={set('acquisition_supplier')} disabled={!f.acquisition_source} /></div>
+            </>
+          )}
           <FileField label="Sampul (jpg/png/webp)" accept=".jpg,.jpeg,.png,.webp" file={cover} onChange={setCover} />
           <FileField label="E-book (PDF)" accept=".pdf" file={ebook} onChange={setEbook} />
         </div>
@@ -91,25 +106,32 @@ export default function Books() {
   const [page, setPage] = useState(1);
   const [q, setQ] = useState('');
   const [cat, setCat] = useState('');
+  const [pub, setPub] = useState('');
   const [categories, setCategories] = useState([]);
+  const [publishers, setPublishers] = useState([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState(null);
   const [reader, setReader] = useState(null);
+  const [detailId, setDetailId] = useState(null);
 
   const load = useCallback(async () => {
     try {
       const params = new URLSearchParams({ page, limit: LIMIT });
       if (q) params.set('q', q);
       if (cat) params.set('category_id', cat);
+      if (pub) params.set('publisher', pub);
       const r = await api(`/books?${params}`);
       setBooks(r.data); setTotal(r.total); setError('');
     } catch (e) { setError(e.message); }
     finally { setLoading(false); }
-  }, [page, q, cat]);
+  }, [page, q, cat, pub]);
 
   useEffect(() => { const t = setTimeout(load, 250); return () => clearTimeout(t); }, [load]);
-  useEffect(() => { api('/categories').then(setCategories).catch(() => {}); }, []);
+  useEffect(() => {
+    api('/categories').then(setCategories).catch(() => {});
+    api('/books/meta/publishers').then(setPublishers).catch(() => {});
+  }, []);
 
   const remove = async (b) => {
     if (!confirm(`Hapus "${b.title}"?`)) return;
@@ -121,13 +143,20 @@ export default function Books() {
     try { await api('/categories', { method: 'POST', body: { name } }); setCategories(await api('/categories')); }
     catch (e) { setError(e.message); }
   };
-
   const reserve = async (b) => {
     try {
       await api('/reservations', { method: 'POST', body: { book_id: b.id } });
       alert(`Reservasi "${b.title}" berhasil. Pantau di menu Pinjaman Saya.`);
     } catch (e) { setError(e.message); }
   };
+  const toggleWish = async (b) => {
+    setBooks((prev) => prev.map((x) => (x.id === b.id ? { ...x, wishlisted: !x.wishlisted } : x))); // optimistis
+    try {
+      if (b.wishlisted) await api(`/wishlist/${b.id}`, { method: 'DELETE' });
+      else await api('/wishlist', { method: 'POST', body: { book_id: b.id } });
+    } catch (e) { setError(e.message); load(); }
+  };
+  const read = (bk) => setReader({ id: bk.id, title: bk.title });
 
   const pages = Math.max(Math.ceil(total / LIMIT), 1);
 
@@ -150,11 +179,15 @@ export default function Books() {
       <div className="flex flex-wrap gap-2">
         <div className="relative min-w-60 flex-1">
           <Search size={16} className="absolute left-4 top-3.5 text-muted" />
-          <input className="input-pill pl-11!" placeholder="Cari judul, penulis, atau ISBN" value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} />
+          <input className="input-pill pl-11!" placeholder="Cari judul, penulis, ISBN, atau kode buku" value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} />
         </div>
         <select className="input-pill w-auto!" value={cat} onChange={(e) => { setCat(e.target.value); setPage(1); }}>
           <option value="">Semua kategori</option>
           {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+        </select>
+        <select className="input-pill w-auto!" value={pub} onChange={(e) => { setPub(e.target.value); setPage(1); }}>
+          <option value="">Semua penerbit</option>
+          {publishers.map((p) => <option key={p} value={p}>{p}</option>)}
         </select>
       </div>
 
@@ -172,9 +205,10 @@ export default function Books() {
           <div className="shelf-grid">
             {books.map((b) => (
               <ShelfBook key={b.id} book={b} isStaff={isStaff}
-                onRead={(bk) => setReader({ id: bk.id, title: bk.title })}
+                onOpen={(bk) => setDetailId(bk.id)} onRead={read}
                 onEdit={(bk) => setModal({ book: bk })} onDelete={remove}
-                onReserve={isStaff ? undefined : reserve} />
+                onReserve={isStaff ? undefined : reserve}
+                onWishlist={user.member ? toggleWish : undefined} />
             ))}
           </div>
         )}
@@ -189,7 +223,8 @@ export default function Books() {
         <button className="btn btn-ghost" disabled={page >= pages} onClick={() => setPage(page + 1)}>Berikutnya</button>
       </div>
 
-      {modal && <BookForm book={modal.book} categories={categories} onClose={() => setModal(null)} onSaved={() => { setModal(null); load(); }} />}
+      {modal && <BookForm book={modal.book} categories={categories} onClose={() => setModal(null)} onSaved={() => { setModal(null); load(); api('/books/meta/publishers').then(setPublishers).catch(() => {}); }} />}
+      {detailId && <BookDetail bookId={detailId} onClose={() => setDetailId(null)} onChanged={load} onRead={read} onReserve={isStaff ? undefined : reserve} />}
       {reader && <BookReader book={reader} onClose={() => setReader(null)} />}
     </div>
   );

@@ -62,7 +62,7 @@ function BorrowTab() {
   const findBook = async (e) => {
     e.preventDefault(); setErr(''); setBook(null);
     try { setBook(await api(`/books/by-isbn/${encodeURIComponent(isbn.trim())}`)); }
-    catch { setErr('Buku dengan ISBN tersebut tidak ditemukan'); }
+    catch { setErr('Buku dengan ISBN / kode tersebut tidak ditemukan'); }
   };
   const reset = () => { setCode(''); setMember(null); setIsbn(''); setBook(null); setErr(''); setTimeout(() => codeRef.current?.focus(), 50); };
 
@@ -77,7 +77,7 @@ function BorrowTab() {
   const borrow = async () => {
     setBusy(true); setErr('');
     try {
-      const r = await api('/borrowings', { method: 'POST', body: { member_code: member.member_code, isbn: book.isbn } });
+      const r = await api('/borrowings', { method: 'POST', body: { member_code: member.member_code, book_id: book.id } });
       setReceipt(r); reset();
     } catch (e) { setErr(e.message); }
     finally { setBusy(false); }
@@ -107,7 +107,7 @@ function BorrowTab() {
 
         <div className="flex items-center gap-2 font-serif text-xl font-semibold"><ScanLine size={20} className="text-clay" /> Langkah 2 · Buku</div>
         <form onSubmit={findBook} className="flex gap-2">
-          <input ref={isbnRef} className="input" placeholder="Scan / ketik ISBN buku" value={isbn} onChange={(e) => setIsbn(e.target.value)} disabled={!member} />
+          <input ref={isbnRef} className="input" placeholder="Scan / ketik ISBN atau kode buku" value={isbn} onChange={(e) => setIsbn(e.target.value)} disabled={!member} />
           <button className="btn btn-primary" disabled={!member}>Cari</button>
         </form>
         {book && (
