@@ -1,4 +1,4 @@
-import { BookMarked, CalendarClock, Heart, Pencil, Star, Trash2 } from 'lucide-react';
+import { BookMarked, CalendarClock, HandHelping, Heart, Pencil, Star, Trash2 } from 'lucide-react';
 
 const COVER_COLORS = ['#914722', '#8F4E00', '#2C4058', '#4A5D77', '#6D3A00', '#5B3A29', '#7A4B2A'];
 
@@ -13,7 +13,7 @@ export function CoverFallback({ title }) {
 }
 
 // Satu buku yang "bersandar" di rak kayu
-export default function ShelfBook({ book, isStaff, onOpen, onRead, onEdit, onDelete, onReserve, onWishlist }) {
+export default function ShelfBook({ book, isStaff, onOpen, onRead, onEdit, onDelete, onReserve, onWishlist, onRequest }) {
   const available = book.available_stock > 0;
   return (
     <div className="shelf-item flex flex-col">
@@ -53,6 +53,11 @@ export default function ShelfBook({ book, isStaff, onOpen, onRead, onEdit, onDel
         {book.is_ebook && onRead && (
           <button className="btn btn-primary mt-2 !px-4 !py-1.5 !text-xs" onClick={() => onRead(book)}>
             <BookMarked size={14} /> Baca Buku
+          </button>
+        )}
+        {!isStaff && onRequest && book.available_stock > 0 && (
+          <button className="btn btn-ghost mt-2 !px-4 !py-1.5 !text-xs" onClick={() => onRequest(book)}>
+            <HandHelping size={14} /> Ajukan Pinjam
           </button>
         )}
         {!isStaff && onReserve && book.available_stock <= 0 && (

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { GraduationCap, UserSquare2, ShieldCheck, UserX, UserPlus, Search, X, Mail, Lock, User } from 'lucide-react';
 import { api } from '../lib/api';
+import Avatar from '../components/Avatar';
 import MemberDetail from '../components/MemberDetail';
 
 const EMPTY = { full_name: '', email: '', password: '', member_type: 'siswa' };
@@ -124,7 +125,7 @@ export default function Members() {
                   <td className="whitespace-nowrap font-mono text-xs font-bold text-clay-deep">{m.member_code}</td>
                   <td>
                     <div className="flex items-center gap-3">
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#FFDBCD] text-xs font-bold text-clay-deep">{initials(m.profiles?.full_name)}</div>
+                      <Avatar name={m.profiles?.full_name} url={m.profiles?.avatar_url} />
                       <span className="font-semibold">{m.profiles?.full_name}</span>
                     </div>
                   </td>

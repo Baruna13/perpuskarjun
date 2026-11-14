@@ -67,6 +67,7 @@ export default function Pengaturan() {
               </table>
             </div>
             <div className="max-w-xs"><label className="field-label">Tambahan hari saat perpanjangan</label><input className="input tnum" type="number" min="1" value={s.renew_days ?? ''} onChange={set('renew_days')} required /></div>
+            <div className="max-w-xs"><label className="field-label">Masa berlaku pengajuan pinjam (hari)</label><input className="input tnum" type="number" min="1" value={s.request_expire_days ?? ''} onChange={set('request_expire_days')} required /></div>
             <p className="text-xs text-muted">Perubahan hanya berlaku untuk peminjaman baru. Jatuh tempo pinjaman yang sudah berjalan tidak berubah.</p>
             <button className="btn btn-primary" disabled={busy === 'save'}><Save size={16} /> {busy === 'save' ? 'Menyimpan...' : 'Simpan Pengaturan'}</button>
           </>

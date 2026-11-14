@@ -1,5 +1,6 @@
-import { NavLink, Outlet } from 'react-router-dom';
-import { LayoutDashboard, BookOpen, IdCard, UserCog, LogOut, Library, ArrowLeftRight, BookCopy, Clock, BarChart3, PackagePlus, Heart, Settings } from 'lucide-react';
+import { NavLink, Link, Outlet } from 'react-router-dom';
+import Avatar from './Avatar';
+import { LayoutDashboard, BookOpen, IdCard, UserCog, LogOut, Library, ArrowLeftRight, BookCopy, Clock, BarChart3, PackagePlus, Heart, Settings, UserRound } from 'lucide-react';
 import NotificationBell from './NotificationBell';
 import Onboarding from './Onboarding';
 import { useAuth } from '../context/AuthContext';
@@ -17,6 +18,7 @@ const NAV = [
   { to: '/members', label: 'Data Anggota', icon: IdCard, roles: STAFF },
   { to: '/pengaturan', label: 'Pengaturan', icon: Settings, roles: ['admin'] },
   { to: '/users', label: 'Pengguna & Akses', icon: UserCog, roles: STAFF },
+  { to: '/profil', label: 'Profil', icon: UserRound, roles: ALL },
 ];
 const ROLE_LABEL = { admin: 'Admin Perpustakaan', pustakawan: 'Pustakawan', anggota: 'Anggota' };
 const initials = (n = '') => n.split(' ').filter(Boolean).slice(0, 2).map((s) => s[0].toUpperCase()).join('');
@@ -64,7 +66,7 @@ export default function Layout() {
         <div className="mt-auto space-y-2">
           <div className="rounded-2xl border border-[#E5DAC8] bg-white/70 p-3">
             <div className="flex items-center gap-3 md:justify-center lg:justify-start">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#FFDBCD] text-sm font-bold text-clay-deep">{initials(user.full_name)}</div>
+              <Link to="/profil" title="Profil saya"><Avatar name={user.full_name} url={user.avatar_url} size="h-10 w-10" text="text-sm" /></Link>
               <div className="hidden min-w-0 lg:block">
                 <div className="truncate text-sm font-bold">{user.full_name}</div>
                 <div className="text-[11px] font-bold uppercase tracking-wide text-clay-deep">{ROLE_LABEL[user.role]}</div>

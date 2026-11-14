@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { BookMarked, CalendarClock, Heart, Trash2, X } from 'lucide-react';
+import { BookMarked, CalendarClock, HandHelping, Heart, Trash2, X } from 'lucide-react';
 import { api } from '../lib/api';
 import { tgl } from '../lib/format';
 import { useAuth } from '../context/AuthContext';
@@ -7,7 +7,7 @@ import { CoverFallback } from './ShelfBook';
 import { Stars, StarInput } from './Stars';
 
 // Detail buku: deskripsi lengkap, wishlist, rating & ulasan
-export default function BookDetail({ bookId, onClose, onChanged, onRead, onReserve }) {
+export default function BookDetail({ bookId, onClose, onChanged, onRead, onReserve, onRequest }) {
   const { user } = useAuth();
   const isStaff = user.role !== 'anggota';
   const memberId = user.member?.id;
@@ -89,6 +89,7 @@ export default function BookDetail({ bookId, onClose, onChanged, onRead, onReser
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {book.is_ebook && onRead && <button className="btn btn-primary" onClick={() => onRead(book)}><BookMarked size={15} /> Baca Buku</button>}
+                  {!isStaff && onRequest && book.available_stock > 0 && <button className="btn btn-primary" onClick={() => onRequest(book)}><HandHelping size={15} /> Ajukan Pinjam</button>}
                   {!isStaff && onReserve && book.available_stock <= 0 && <button className="btn btn-ghost" onClick={() => onReserve(book)}><CalendarClock size={15} /> Reservasi</button>}
                   {memberId && <button className="btn btn-ghost" onClick={toggleWish}><Heart size={15} className={book.wishlisted ? 'text-rust' : ''} fill={book.wishlisted ? 'currentColor' : 'none'} /> {book.wishlisted ? 'Di wishlist' : 'Wishlist'}</button>}
                 </div>

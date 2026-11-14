@@ -9,14 +9,14 @@ export async function authenticate(req, res, next) {
   if (error || !data?.user) return res.status(401).json({ error: 'Token tidak valid' });
 
   const { data: profile } = await supabase
-    .from('profiles').select('id, full_name, role').eq('id', data.user.id).single();
+    .from('profiles').select('id, full_name, role, avatar_url').eq('id', data.user.id).single();
   if (!profile) return res.status(403).json({ error: 'Profil tidak ditemukan' });
 
   const { data: member } = await supabase
     .from('members').select('id, member_code, member_type, is_active')
     .eq('user_id', profile.id).maybeSingle();
 
-  req.user = { ...profile, member };
+  req.user = { ...profile, email: data.user.email, member };
   next();
 }
 

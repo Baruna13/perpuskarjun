@@ -71,6 +71,17 @@ router.post('/', staff, wrap(async (req, res) => {
   raise(lastErr);
 }));
 
+// Staf menetapkan password baru untuk akun anggota (password lama tidak bisa dilihat)
+router.post('/:id/reset-password', staff, wrap(async (req, res) => {
+  const { password } = z.object({ password: z.string().min(8, 'Password minimal 8 karakter') }).parse(req.body);
+  const { data: m, error } = await supabase.from('members').select('user_id, profiles(role)').eq('id', req.params.id).single();
+  raise(error);
+  if (m.profiles?.role !== 'anggota') throw new HttpError(403, 'Hanya akun anggota yang dapat direset di sini');
+  const { error: ue } = await supabase.auth.admin.updateUserById(m.user_id, { password });
+  if (ue) throw new HttpError(422, ue.message);
+  res.json({ ok: true });
+}));
+
 router.patch('/:id', staff, wrap(async (req, res) => {
   const b = z.object({
     full_name: z.string().trim().min(1).optional(),

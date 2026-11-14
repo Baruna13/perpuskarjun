@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Printer, X } from 'lucide-react';
+import { KeyRound, Printer, X } from 'lucide-react';
 import { api } from '../lib/api';
 import { rupiah, tgl } from '../lib/format';
 import MemberCard from './MemberCard';
@@ -14,6 +14,13 @@ export default function MemberDetail({ member, onClose }) {
   useEffect(() => {
     api(`/borrowings?member_id=${member.id}&scope=all`).then(setRows).catch((e) => setErr(e.message));
   }, [member.id]);
+
+  const resetPw = async () => {
+    const password = prompt(`Password baru untuk ${name} (min. 8 karakter).\nPassword lama tidak dapat dilihat, hanya bisa diganti. Sampaikan ke anggota dan minta ia menggantinya di menu Profil.`);
+    if (!password) return;
+    try { await api(`/members/${member.id}/reset-password`, { method: 'POST', body: { password } }); alert('Password berhasil direset.'); }
+    catch (e) { alert(e.message); }
+  };
 
   const active = rows?.filter((b) => !b.return_date).length ?? 0;
   const fines = rows?.reduce((a, b) => a + (b.fine && !b.fine.is_paid ? Number(b.fine.amount) : 0), 0) ?? 0;
@@ -31,6 +38,7 @@ export default function MemberDetail({ member, onClose }) {
           <div className="space-y-3">
             <div className="print-area"><MemberCard name={name} code={member.member_code} type={member.member_type} /></div>
             <button className="btn btn-ghost no-print w-full" onClick={() => window.print()}><Printer size={15} /> Cetak Kartu</button>
+            <button className="btn btn-ghost no-print w-full" onClick={resetPw}><KeyRound size={15} /> Reset Password</button>
             <div className="no-print grid grid-cols-2 gap-2 text-sm">
               <div className="rounded-xl bg-parchment/70 p-3"><div className="field-label !mb-0">Sedang dipinjam</div><b className="tnum">{active} / {member.max_borrow_limit}</b></div>
               <div className="rounded-xl bg-parchment/70 p-3"><div className="field-label !mb-0">Denda belum lunas</div><b className="tnum">{rupiah(fines)}</b></div>

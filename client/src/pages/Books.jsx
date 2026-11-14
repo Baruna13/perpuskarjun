@@ -149,6 +149,12 @@ export default function Books() {
       alert(`Reservasi "${b.title}" berhasil. Pantau di menu Pinjaman Saya.`);
     } catch (e) { setError(e.message); }
   };
+  const requestBorrow = async (b) => {
+    try {
+      await api('/requests', { method: 'POST', body: { book_id: b.id } });
+      alert(`Pengajuan "${b.title}" terkirim. Pustakawan akan menyiapkan bukunya; ambil di perpustakaan sebelum batas waktu. Pantau di menu Pinjaman Saya.`);
+    } catch (e) { setError(e.message); }
+  };
   const toggleWish = async (b) => {
     setBooks((prev) => prev.map((x) => (x.id === b.id ? { ...x, wishlisted: !x.wishlisted } : x))); // optimistis
     try {
@@ -208,6 +214,7 @@ export default function Books() {
                 onOpen={(bk) => setDetailId(bk.id)} onRead={read}
                 onEdit={(bk) => setModal({ book: bk })} onDelete={remove}
                 onReserve={isStaff ? undefined : reserve}
+                onRequest={!isStaff && user.member?.is_active ? requestBorrow : undefined}
                 onWishlist={user.member ? toggleWish : undefined} />
             ))}
           </div>
@@ -224,7 +231,7 @@ export default function Books() {
       </div>
 
       {modal && <BookForm book={modal.book} categories={categories} onClose={() => setModal(null)} onSaved={() => { setModal(null); load(); api('/books/meta/publishers').then(setPublishers).catch(() => {}); }} />}
-      {detailId && <BookDetail bookId={detailId} onClose={() => setDetailId(null)} onChanged={load} onRead={read} onReserve={isStaff ? undefined : reserve} />}
+      {detailId && <BookDetail bookId={detailId} onClose={() => setDetailId(null)} onChanged={load} onRead={read} onReserve={isStaff ? undefined : reserve} onRequest={!isStaff && user.member?.is_active ? requestBorrow : undefined} />}
       {reader && <BookReader book={reader} onClose={() => setReader(null)} />}
     </div>
   );

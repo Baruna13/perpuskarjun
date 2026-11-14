@@ -55,6 +55,19 @@ router.get('/', wrap(async (req, res) => {
     if (fines?.length) items.push({ id: 'fines', level: 'warn', title: `${fines.length} denda belum dibayar`, body: `Total ${rupiah(fines.reduce((a, f) => a + Number(f.amount), 0))}`, link: '/sirkulasi' });
   }
 
+  // Pengajuan pinjam
+  const nowIso = new Date().toISOString();
+  if (req.user.role !== 'anggota') {
+    const { count } = await supabase.from('borrow_requests').select('id', { count: 'exact', head: true })
+      .eq('status', 'pending').gt('expires_at', nowIso);
+    if (count) items.push({ id: 'requests', level: 'warn', title: `${count} pengajuan pinjam menunggu`, body: 'Siapkan bukunya, lalu setujui saat anggota datang.', link: '/sirkulasi?tab=pengajuan' });
+  } else if (req.user.member) {
+    const since = new Date(Date.now() - 7 * 86400000).toISOString();
+    const { data: rej } = await supabase.from('borrow_requests').select('id, note, books(title)')
+      .eq('member_id', req.user.member.id).eq('status', 'rejected').gte('decided_at', since);
+    for (const r of rej ?? []) items.push({ id: `rej-${r.id}`, level: 'warn', title: 'Pengajuan pinjam ditolak', body: `"${r.books?.title}"${r.note ? ` · ${r.note}` : ''}`, link: '/pinjaman' });
+  }
+
   items.sort((a, b) => ORDER[a.level] - ORDER[b.level]);
   res.json(items);
 }));

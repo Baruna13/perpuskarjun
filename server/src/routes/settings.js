@@ -13,6 +13,7 @@ const FIELDS = {
   loan_days_siswa: 1, loan_days_guru: 1, loan_days_staf: 1,
   max_borrow_siswa: 1, max_borrow_guru: 1, max_borrow_staf: 1,
   renew_days: 1,
+  request_expire_days: 1,
 };
 
 router.get('/', requireRole('admin', 'pustakawan'), wrap(async (_req, res) => {

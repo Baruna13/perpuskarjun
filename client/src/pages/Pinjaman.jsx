@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
-import { BookCopy, RefreshCw, X, Wallet, CalendarClock, IdCard } from 'lucide-react';
+import { BookCopy, RefreshCw, X, Wallet, CalendarClock, IdCard, HandHelping } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { CardModal } from '../components/MemberCard';
 import { api } from '../lib/api';
 import { rupiah, tgl } from '../lib/format';
 import StatusBadge from '../components/StatusBadge';
+
+const REQ_TONE = { pending: 'badge-ochre', approved: 'badge-sage', rejected: 'badge-rust', expired: 'badge-ink', cancelled: 'badge-ink' };
+const REQ_LABEL = { pending: 'Menunggu', approved: 'Disetujui', rejected: 'Ditolak', expired: 'Kedaluwarsa', cancelled: 'Dibatalkan' };
 
 export default function Pinjaman() {
   const { user } = useAuth();
@@ -12,13 +15,14 @@ export default function Pinjaman() {
   const [loans, setLoans] = useState([]);
   const [fines, setFines] = useState([]);
   const [resv, setResv] = useState([]);
+  const [reqs, setReqs] = useState([]);
   const [msg, setMsg] = useState(null); // {type, text}
   const [busy, setBusy] = useState('');
 
   const load = useCallback(async () => {
     try {
-      const [l, f, r] = await Promise.all([api('/borrowings'), api('/fines'), api('/reservations')]);
-      setLoans(l); setFines(f); setResv(r);
+      const [l, f, r, q] = await Promise.all([api('/borrowings'), api('/fines'), api('/reservations'), api('/requests')]);
+      setLoans(l); setFines(f); setResv(r); setReqs(q);
     } catch (e) { setMsg({ type: 'err', text: e.message }); }
   }, []);
   useEffect(() => { load(); }, [load]);
@@ -34,6 +38,7 @@ export default function Pinjaman() {
   const history = loans.filter((b) => b.return_date);
   const waiting = resv.filter((r) => r.status === 'waiting');
   const unpaid = fines.filter((f) => !f.is_paid);
+  const pendingReqs = reqs.filter((r) => r.status === 'pending');
 
   return (
     <div className="space-y-6">
@@ -78,6 +83,25 @@ export default function Pinjaman() {
             </div>
           ))}
           {!active.length && <div className="card p-6 text-center text-sm text-muted md:col-span-2">Tidak ada buku yang sedang dipinjam.</div>}
+        </div>
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="flex items-center gap-2 font-serif text-2xl font-semibold"><HandHelping size={20} className="text-clay" /> Pengajuan Pinjam <span className="badge bg-parchment text-muted">{pendingReqs.length}</span></h2>
+        <div className="card divide-y divide-parchment">
+          {reqs.slice(0, 10).map((r) => (
+            <div key={r.id} className="flex items-center justify-between gap-3 p-4">
+              <div className="min-w-0">
+                <div className="truncate font-semibold">{r.books?.title}</div>
+                <div className="text-xs text-muted">Diajukan {tgl(r.requested_at)} · {r.status === 'pending' ? `ambil di perpustakaan sebelum ${tgl(r.expires_at)}` : (r.note || (r.status === 'approved' ? 'sudah dipinjamkan' : ''))}</div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className={`badge ${REQ_TONE[r.status]}`}>{REQ_LABEL[r.status]}</span>
+                {r.status === 'pending' && <button className="icon-btn hover:!text-rust" title="Batalkan" disabled={busy === r.id} onClick={() => act(r.id, () => api(`/requests/${r.id}`, { method: 'DELETE' }), 'Pengajuan dibatalkan.')}><X size={17} /></button>}
+              </div>
+            </div>
+          ))}
+          {!reqs.length && <div className="p-6 text-center text-sm text-muted">Belum ada pengajuan. Klik "Ajukan Pinjam" pada buku di katalog, pustakawan akan menyiapkannya.</div>}
         </div>
       </section>
 

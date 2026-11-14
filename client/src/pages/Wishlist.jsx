@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Heart } from 'lucide-react';
 import { api } from '../lib/api';
+import { useAuth } from '../context/AuthContext';
 import ShelfBook from '../components/ShelfBook';
 import BookDetail from '../components/BookDetail';
 import BookReader from '../components/BookReader';
 
 export default function Wishlist() {
+  const { user } = useAuth();
   const [books, setBooks] = useState(null);
   const [err, setErr] = useState('');
   const [detailId, setDetailId] = useState(null);
@@ -21,6 +23,11 @@ export default function Wishlist() {
     try { await api('/reservations', { method: 'POST', body: { book_id: b.id } }); alert(`Reservasi "${b.title}" berhasil.`); }
     catch (e) { setErr(e.message); }
   };
+  const requestBorrow = async (b) => {
+    try { await api('/requests', { method: 'POST', body: { book_id: b.id } }); alert(`Pengajuan "${b.title}" terkirim. Pantau di menu Pinjaman Saya.`); }
+    catch (e) { setErr(e.message); }
+  };
+  const canRequest = user.member?.is_active ? requestBorrow : undefined;
   const read = (b) => setReader({ id: b.id, title: b.title });
 
   return (
@@ -33,12 +40,12 @@ export default function Wishlist() {
       {err && <div className="rounded-xl bg-rust-soft p-3 text-sm font-medium text-rust">{err}</div>}
       <div className="panel p-3 md:p-5">
         <div className="shelf-grid">
-          {books?.map((b) => <ShelfBook key={b.id} book={b} onOpen={(x) => setDetailId(x.id)} onRead={read} onReserve={reserve} onWishlist={remove} />)}
+          {books?.map((b) => <ShelfBook key={b.id} book={b} onOpen={(x) => setDetailId(x.id)} onRead={read} onReserve={reserve} onRequest={canRequest} onWishlist={remove} />)}
         </div>
         {books && !books.length && <div className="flex flex-col items-center gap-2 py-16 text-muted"><Heart size={40} /> Wishlist masih kosong</div>}
         {!books && !err && <div className="py-16 text-center text-muted">Memuat...</div>}
       </div>
-      {detailId && <BookDetail bookId={detailId} onClose={() => setDetailId(null)} onChanged={load} onRead={read} onReserve={reserve} />}
+      {detailId && <BookDetail bookId={detailId} onClose={() => setDetailId(null)} onChanged={load} onRead={read} onReserve={reserve} onRequest={canRequest} />}
       {reader && <BookReader book={reader} onClose={() => setReader(null)} />}
     </div>
   );

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
-import { UserPlus, Trash2, Search, ShieldCheck, BookMarked, User, X, Mail, Lock } from 'lucide-react';
+import { UserPlus, Trash2, Search, ShieldCheck, BookMarked, User, X, Mail, Lock, KeyRound } from 'lucide-react';
 import { api } from '../lib/api';
+import Avatar from '../components/Avatar';
 import { useAuth } from '../context/AuthContext';
 
 const ROLES = {
@@ -31,6 +32,11 @@ export default function Users() {
   const act = async (fn) => { setError(''); try { await fn(); await load(); } catch (e) { setError(e.message); } };
   const setRole = (id, role) => act(() => api(`/users/${id}`, { method: 'PATCH', body: { role } }));
   const remove = (u) => confirm(`Hapus ${u.full_name}?`) && act(() => api(`/users/${u.id}`, { method: 'DELETE' }));
+  const resetPw = (u) => {
+    const password = prompt(`Password baru untuk ${u.full_name} (min. 8 karakter).\nPassword lama tidak dapat dilihat, hanya bisa diganti. Sampaikan password baru ke pengguna dan minta ia menggantinya di menu Profil.`);
+    if (!password) return;
+    act(async () => { await api(`/users/${u.id}/reset-password`, { method: 'POST', body: { password } }); alert('Password berhasil direset.'); });
+  };
   const create = (e) => {
     e.preventDefault();
     act(async () => { await api('/users', { method: 'POST', body: form }); setForm(null); });
@@ -111,7 +117,7 @@ export default function Users() {
                   <tr key={u.id}>
                     <td>
                       <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#FFDBCD] text-xs font-bold text-clay-deep">{initials(u.full_name)}</div>
+                        <Avatar name={u.full_name} url={u.avatar_url} />
                         <div>
                           <div className="flex items-center gap-2 font-semibold">{u.full_name}{me && <span className="badge bg-[#F9E3D5] text-clay-deep !px-2 !py-0">Anda</span>}</div>
                           <div className="tnum text-[11px] text-[#8C7A6B]">ID: {u.id.slice(0, 8).toUpperCase()}</div>
@@ -126,7 +132,7 @@ export default function Users() {
                           </select>
                         : <RolePill role={u.role} />}
                     </td>
-                    {isAdmin && <td className="text-right">{!me && <button className="icon-btn hover:!text-rust" title="Hapus" onClick={() => remove(u)}><Trash2 size={16} /></button>}</td>}
+                    {isAdmin && <td className="whitespace-nowrap text-right">{!me && <><button className="icon-btn" title="Reset password" onClick={() => resetPw(u)}><KeyRound size={16} /></button><button className="icon-btn hover:!text-rust" title="Hapus" onClick={() => remove(u)}><Trash2 size={16} /></button></>}</td>}
                   </tr>
                 );
               })}

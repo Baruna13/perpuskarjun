@@ -16,6 +16,8 @@ import wishlist from './routes/wishlist.js';
 import acquisitions from './routes/acquisitions.js';
 import settings from './routes/settings.js';
 import backup from './routes/backup.js';
+import profile from './routes/profile.js';
+import requests from './routes/requests.js';
 
 const app = express();
 
@@ -42,6 +44,8 @@ app.use('/api/wishlist', wishlist);
 app.use('/api/acquisitions', acquisitions);
 app.use('/api/settings', settings);
 app.use('/api/backup', backup);
+app.use('/api/profile', profile);
+app.use('/api/requests', requests);
 
 app.use((_req, res) => res.status(404).json({ error: 'Endpoint tidak ditemukan' }));
 

@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ArrowUpRight, ArrowDownLeft, Wallet, History, Search, Printer, X, AlertTriangle, CheckCircle2, ScanLine } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
+import { ArrowUpRight, ArrowDownLeft, Wallet, History, Search, Printer, X, AlertTriangle, CheckCircle2, ScanLine, Inbox } from 'lucide-react';
 import { api } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { rupiah, tgl } from '../lib/format';
 import StatusBadge from '../components/StatusBadge';
+import Avatar from '../components/Avatar';
 
-const TABS = [['pinjam', 'Peminjaman', ArrowUpRight], ['kembali', 'Pengembalian', ArrowDownLeft], ['denda', 'Denda', Wallet], ['riwayat', 'Riwayat', History]];
+const TABS = [['pinjam', 'Peminjaman', ArrowUpRight], ['pengajuan', 'Pengajuan', Inbox], ['kembali', 'Pengembalian', ArrowDownLeft], ['denda', 'Denda', Wallet], ['riwayat', 'Riwayat', History]];
 
 function useDebouncedLoad(load, deps) {
   useEffect(() => { const t = setTimeout(load, 250); return () => clearTimeout(t); }, deps); // eslint-disable-line
@@ -321,8 +323,88 @@ function HistoryTab() {
   );
 }
 
+// ---------- Pengajuan pinjam dari anggota ----------
+const REQ_FILTERS = [['pending', 'Menunggu'], ['approved', 'Disetujui'], ['rejected', 'Ditolak'], ['expired', 'Kedaluwarsa'], ['cancelled', 'Dibatalkan'], ['all', 'Semua']];
+const REQ_TONE = { pending: 'badge-ochre', approved: 'badge-sage', rejected: 'badge-rust', expired: 'badge-ink', cancelled: 'badge-ink' };
+const REQ_LABEL = { pending: 'Menunggu', approved: 'Disetujui', rejected: 'Ditolak', expired: 'Kedaluwarsa', cancelled: 'Dibatalkan' };
+
+function RequestsTab({ onChange, onReceipt }) {
+  const [status, setStatus] = useState('pending');
+  const [rows, setRows] = useState([]);
+  const [err, setErr] = useState('');
+  const [busy, setBusy] = useState('');
+
+  const load = useCallback(() => api(`/requests?status=${status}`).then(setRows).catch((e) => setErr(e.message)), [status]);
+  useEffect(() => { load(); }, [load]);
+
+  const approve = async (r) => {
+    setBusy(r.id); setErr('');
+    try { const loan = await api(`/requests/${r.id}/approve`, { method: 'POST' }); onReceipt(loan); await load(); onChange(); }
+    catch (e) { setErr(e.message); }
+    finally { setBusy(''); }
+  };
+  const reject = async (r) => {
+    const note = prompt('Alasan penolakan (opsional):');
+    if (note === null) return;
+    setBusy(r.id); setErr('');
+    try { await api(`/requests/${r.id}/reject`, { method: 'POST', body: { note } }); await load(); onChange(); }
+    catch (e) { setErr(e.message); }
+    finally { setBusy(''); }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="rounded-2xl bg-parchment/70 p-4 text-sm text-muted">
+        Anggota mengajukan pinjam dari aplikasi. <b className="text-espresso">Siapkan bukunya</b>, lalu klik <b className="text-espresso">Pinjamkan sekarang</b> saat anggota datang. Semua validasi (kuota, denda, stok) dijalankan ulang otomatis dan struk bisa dicetak.
+      </div>
+      <select className="input-pill w-auto!" value={status} onChange={(e) => setStatus(e.target.value)}>
+        {REQ_FILTERS.map(([k, l]) => <option key={k} value={k}>{l}</option>)}
+      </select>
+      {err && <div className="rounded-xl bg-rust-soft p-3 text-sm font-medium text-rust">{err}</div>}
+      <div className="card overflow-x-auto">
+        <table className="tbl">
+          <thead><tr><th>Diajukan</th><th>Anggota</th><th>Buku</th><th>Stok</th><th>Batas ambil</th><th>Status</th><th /></tr></thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr key={r.id}>
+                <td className="whitespace-nowrap">{tgl(r.requested_at)}</td>
+                <td>
+                  <div className="flex items-center gap-3">
+                    <Avatar name={r.members?.profiles?.full_name} url={r.members?.profiles?.avatar_url} />
+                    <div><div className="font-semibold">{r.members?.profiles?.full_name}</div><div className="font-mono text-[11px] text-clay-deep">{r.members?.member_code}</div></div>
+                  </div>
+                </td>
+                <td className="max-w-[220px]"><div className="truncate font-semibold">{r.books?.title}</div><div className="text-[11px] text-muted">{r.books?.shelf_location}</div></td>
+                <td><span className={`badge ${r.books?.available_stock > 0 ? 'badge-sage' : 'badge-rust'}`}>{r.books?.available_stock ?? 0}</span></td>
+                <td className="whitespace-nowrap">{tgl(r.expires_at)}</td>
+                <td><span className={`badge ${REQ_TONE[r.status]}`}>{REQ_LABEL[r.status]}</span>{r.note && <div className="mt-1 max-w-[160px] truncate text-[11px] text-muted" title={r.note}>{r.note}</div>}</td>
+                <td className="whitespace-nowrap text-right">
+                  {r.status === 'pending' && (
+                    <>
+                      <button className="btn btn-primary !px-4 !py-1.5 !text-xs" disabled={busy === r.id} onClick={() => approve(r)}>Pinjamkan sekarang</button>{' '}
+                      <button className="btn btn-ghost !px-3 !py-1.5 !text-xs text-rust" disabled={busy === r.id} onClick={() => reject(r)}>Tolak</button>
+                    </>
+                  )}
+                </td>
+              </tr>
+            ))}
+            {!rows.length && <tr><td colSpan={7} className="!h-24 text-center text-muted">Tidak ada pengajuan</td></tr>}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+
 export default function Sirkulasi() {
-  const [tab, setTab] = useState('pinjam');
+  const { user } = useAuth();
+  const [sp] = useSearchParams();
+  const [tab, setTab] = useState(sp.get('tab') ?? 'pinjam');
+  const [pending, setPending] = useState(0);
+  const [receipt, setReceipt] = useState(null);
+  const refreshPending = useCallback(() => api('/requests?status=pending').then((r) => setPending(r.length)).catch(() => {}), []);
+  useEffect(() => { refreshPending(); }, [refreshPending, tab]);
   return (
     <div className="space-y-5">
       <div>
@@ -335,13 +417,16 @@ export default function Sirkulasi() {
           <button key={k} onClick={() => setTab(k)}
             className={`flex items-center gap-2 whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold transition ${tab === k ? 'bg-white text-clay-deep shadow-sm' : 'text-muted hover:text-espresso'}`}>
             <Icon size={15} /> {label}
+            {k === 'pengajuan' && pending > 0 && <span className="tnum flex h-5 min-w-5 items-center justify-center rounded-full bg-clay px-1 text-[10px] font-bold text-white">{pending}</span>}
           </button>
         ))}
       </div>
       {tab === 'pinjam' && <BorrowTab />}
+      {tab === 'pengajuan' && <RequestsTab onChange={refreshPending} onReceipt={setReceipt} />}
       {tab === 'kembali' && <ReturnTab />}
       {tab === 'denda' && <FinesTab />}
       {tab === 'riwayat' && <HistoryTab />}
+      {receipt && <Receipt data={receipt} officer={user.full_name} onClose={() => setReceipt(null)} />}
     </div>
   );
 }

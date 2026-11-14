@@ -11,7 +11,7 @@ const admin = requireRole('admin');
 // Admin: CRUD, Pustakawan: read only
 router.get('/', requireRole('admin', 'pustakawan'), wrap(async (_req, res) => {
   const { data: profiles, error } = await supabase
-    .from('profiles').select('id, full_name, role, created_at').order('created_at', { ascending: false });
+    .from('profiles').select('id, full_name, role, avatar_url, created_at').order('created_at', { ascending: false });
   raise(error);
   const { data: list } = await supabase.auth.admin.listUsers({ perPage: 1000 });
   const emails = new Map((list?.users ?? []).map((u) => [u.id, u.email]));
@@ -47,6 +47,14 @@ router.patch('/:id', admin, wrap(async (req, res) => {
     .update({ ...b, updated_at: new Date().toISOString() }).eq('id', req.params.id).select().single();
   raise(error);
   res.json(data);
+}));
+
+// Admin menetapkan password baru (password lama tidak pernah bisa dilihat; hanya bisa diganti)
+router.post('/:id/reset-password', admin, wrap(async (req, res) => {
+  const { password } = z.object({ password: z.string().min(8, 'Password minimal 8 karakter') }).parse(req.body);
+  const { error } = await supabase.auth.admin.updateUserById(req.params.id, { password });
+  if (error) throw new HttpError(422, error.message);
+  res.json({ ok: true });
 }));
 
 router.delete('/:id', admin, wrap(async (req, res) => {
